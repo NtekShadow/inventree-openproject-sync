@@ -1,0 +1,63 @@
+# Create a GitHub release with wheel and sdist when a version tag (v*) is pushed
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check tag matches plugin version
+        run: |
+          version="v$(python -c 'import openproject_sync; print(openproject_sync.PLUGIN_VERSION)')"
+          test "$version" = "$GITHUB_REF_NAME" || { echo "Tag $GITHUB_REF_NAME != $version"; exit 1; }
+      - name: Unit Tests
+        run: |
+          pip install requests build
+          python -m unittest discover -s tests
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+      - name: Build Package
+        run: python -m build
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          repo="https://github.com/${GITHUB_REPOSITORY}"
+          wheel="$(cd dist && ls *.whl)"
+          cat > notes.md <<EOF
+          ## Installation in InvenTree
+
+          *Einstellungen > Plugins > Plugin installieren*
+
+          - Paketname: \`inventree-openproject-sync\`
+          - Quelle: \`git+${repo}@${GITHUB_REF_NAME}\`
+
+          oder als Zeile in der \`plugins.txt\`:
+
+          \`\`\`
+          inventree-openproject-sync @ ${repo}/releases/download/${GITHUB_REF_NAME}/${wheel}
+          \`\`\`
+
+          Danach die Integrationen *Ereignis*, *Zeitplan*, *URL* und *Oberfläche* aktivieren und das Plugin einrichten (siehe README).
+          EOF
+          gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
