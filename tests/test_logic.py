@@ -10,6 +10,7 @@ from openproject_sync.client import OpenProjectError
 from openproject_sync.sync import (
     MARKER,
     compose_description,
+    match_principal,
     parse_mapping,
     plan_two_way,
     render_block,
@@ -123,6 +124,31 @@ class MiscTest(unittest.TestCase):
             {'_embedded': {'details': {'attribute': 'percentageDone'}}},
         ]}})
         self.assertEqual(multi.invalid_attributes(), {'status', 'percentageDone'})
+
+
+
+class MatchPrincipalTest(unittest.TestCase):
+    PRINCIPALS = [
+        {'_type': 'User', 'name': 'Anna Dreher', 'login': 'adreher'},
+        {'_type': 'User', 'name': 'Bob Fräser', 'login': 'bob@example.com'},
+        {'_type': 'User', 'name': 'Carl', 'email': 'carl@example.com', 'login': 'carl'},
+        {'_type': 'Group', 'name': 'Fertigung'},
+    ]
+
+    def match(self, **who):
+        found = match_principal(self.PRINCIPALS, who)
+        return found and found['name']
+
+    def test_user(self):
+        self.assertEqual(self.match(type='user', email='CARL@example.com', login='x', name='y'), 'Carl')
+        self.assertEqual(self.match(type='user', email='bob@example.com', login='bob', name=''), 'Bob Fräser')
+        self.assertEqual(self.match(type='user', email='', login='ADreher', name=''), 'Anna Dreher')
+        self.assertEqual(self.match(type='user', email='', login='anna', name='Anna Dreher'), 'Anna Dreher')
+        self.assertIsNone(self.match(type='user', email='', login='', name='Fertigung'))
+
+    def test_group(self):
+        self.assertEqual(self.match(type='group', name='fertigung'), 'Fertigung')
+        self.assertIsNone(self.match(type='group', name='Anna Dreher'))
 
 
 if __name__ == '__main__':

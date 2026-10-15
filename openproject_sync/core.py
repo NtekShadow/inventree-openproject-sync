@@ -126,6 +126,12 @@ class OpenProjectSync(
             "description": "Sätze, die nicht in 'Arbeit' zählen, z. B. Standzeit (Maschine läuft allein); getrennt mit ';'",
             "default": "",
         },
+        "PUSH_RESPONSIBLE": {
+            "name": "Verantwortliche übertragen",
+            "description": "Verantwortlich aus InvenTree in OpenProject setzen (Zuordnung über E-Mail, Login oder Name; Gruppen über den Namen)",
+            "validator": bool,
+            "default": True,
+        },
         "PUSH_WORK": {
             "name": "Aufwand übertragen",
             "description": "Zeitbasierte Einträge aus Manufacturing Costs × Menge als 'Arbeit' in OpenProject",

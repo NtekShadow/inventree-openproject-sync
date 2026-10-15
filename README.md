@@ -9,15 +9,15 @@ Benötigt InvenTree ≥ 1.0. Projektbasierte IDs wie `EL-5` gibt es ab OpenProje
 **Über die InvenTree-Oberfläche** (*Einstellungen > Plugins > Plugin installieren*):
 
 - Paketname: `inventree-openproject-sync`
-- Quelle: `git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.1`
+- Quelle: `git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.2`
 
 **Oder in der `plugins.txt`** von InvenTree (eine Zeile):
 
 ```
-inventree-openproject-sync @ git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.1
+inventree-openproject-sync @ git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.2
 ```
 
-Statt Git geht auch das Wheel aus dem [Release](https://github.com/NtekShadow/inventree-openproject-sync/releases), z. B. `inventree-openproject-sync @ https://github.com/NtekShadow/inventree-openproject-sync/releases/download/v0.1.1/inventree_openproject_sync-0.1.1-py3-none-any.whl`. Das Frontend ist schon gebaut und eingecheckt, ein Node-Build auf dem Server ist nicht nötig.
+Statt Git geht auch das Wheel aus dem [Release](https://github.com/NtekShadow/inventree-openproject-sync/releases), z. B. `inventree-openproject-sync @ https://github.com/NtekShadow/inventree-openproject-sync/releases/download/v0.1.2/inventree_openproject_sync-0.1.2-py3-none-any.whl`. Das Frontend ist schon gebaut und eingecheckt, ein Node-Build auf dem Server ist nicht nötig.
 
 In InvenTree unter *Einstellungen > Plugins* müssen diese Integrationen aktiviert sein: **Ereignis**, **Zeitplan**, **URL** und **Oberfläche**. Danach das Plugin *OpenProject Sync* aktivieren.
 
@@ -40,6 +40,7 @@ Alles andere hat brauchbare Standardwerte:
 | Status-Zuordnung | `PENDING=Neu; PRODUCTION=In Bearbeitung; …` | InvenTree-Status = OpenProject-Status**name**, nicht aufgeführte werden nicht übertragen |
 | Fortschritt übertragen | an | Fertig- bzw. Liefermenge als *% erledigt* |
 | Termine aus OpenProject übernehmen | an | Start-/Endtermin in beide Richtungen |
+| Verantwortliche übertragen | an | *Verantwortlich* aus InvenTree setzen (siehe unten) |
 | Benutzerdefinierte Felder | leer | z. B. `PDM-Nummer=ipn; Lieferant=supplier` (siehe unten) |
 | Präfix für Verweise | `OP#` | |
 
@@ -113,12 +114,15 @@ Die Parameternamen sind einstellbar. Ohne Manufacturing-Costs-Plugin bleiben Sch
 | % erledigt | fertige/bestellte Menge | – |
 | Start-/Endtermin | ✓ | ✓ |
 | Custom Fields | laut Zuordnung | – |
+| Verantwortlich | Benutzer oder Gruppe aus InvenTree | – |
 
 Für jedes Feld speichert das Plugin den Wert, auf den sich beide Seiten beim letzten Sync geeinigt haben. Daran sieht es, welche Seite etwas geändert hat:
 
 - Felder von InvenTree werden nur gesendet, wenn sie sich in InvenTree geändert haben. Wer in OpenProject z. B. den Titel von Hand ändert, behält ihn, bis sich der Auftrag ändert.
 - Bei Terminen, die auf beiden Seiten geändert wurden, gewinnt OpenProject.
 - Lehnt OpenProject ein Feld ab, etwa *% erledigt* bei statusbasierter Fortschrittsberechnung oder einen Statuswechsel, den der Workflow nicht erlaubt, wird der Rest trotzdem gespeichert. Der Hinweis erscheint im Panel.
+
+**Verantwortlich:** Ein InvenTree-Benutzer wird über die E-Mail-Adresse zugeordnet, ersatzweise über den Login (gleich E-Mail oder Benutzername) und zuletzt über den vollen Namen; eine InvenTree-Gruppe über den Gruppennamen. Gesucht wird nur unter den Mitgliedern des Projekts, in dem das Arbeitspaket liegt. E-Mail-Adressen liefert OpenProject nur, wenn der API-Benutzer Administrator ist oder die Personen ihre Adresse nicht verbergen. Ohne Treffer bleibt das Feld unverändert und das Panel zeigt einen Hinweis. *Zugewiesen an* fasst das Plugin nicht an, das wird in OpenProject geplant.
 
 **Wann:** Sofort beim Speichern eines Auftrags oder einer Bestellposition. Änderungen in OpenProject holt alle 5 Minuten eine Abfrage ab, einen Webhook braucht es nicht. Dabei fragt das Plugin nur die verknüpften Arbeitspakete ab und gleicht nur die geänderten ab.
 

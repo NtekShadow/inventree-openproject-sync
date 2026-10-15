@@ -134,6 +134,39 @@ def option_links(spec: dict, value, multi: bool) -> tuple[object, list[str]]:
     return {"href": hrefs[0] if hrefs else None}, missing
 
 
+def match_principal(principals: list[dict], who: dict) -> dict | None:
+    """OpenProject user or group for an InvenTree owner.
+
+    Users are matched by email, then by login (email or username), then by
+    name; groups by name. Emails are only visible to OpenProject admins (or
+    when users do not hide them), hence the fallbacks.
+    """
+
+    def norm(value) -> str:
+        return str(value or "").strip().lower()
+
+    if who.get("type") == "group":
+        candidates = [("name", who.get("name"))]
+        kind = "Group"
+    else:
+        candidates = [
+            ("email", who.get("email")),
+            ("login", who.get("email")),
+            ("login", who.get("login")),
+            ("name", who.get("name")),
+        ]
+        kind = "User"
+    for attr, value in candidates:
+        if not norm(value):
+            continue
+        for principal in principals:
+            if principal.get("_type") == kind and norm(principal.get(attr)) == norm(
+                value
+            ):
+                return principal
+    return None
+
+
 def _digest(text: str) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
 
@@ -374,7 +407,8 @@ class Syncer:
         extra = [
             f
             for f in values
-            if f not in ("subject", "block") and not (f == "parent" and not values[f])
+            if f not in ("subject", "block")
+            and not (f in ("parent", "responsible") and not values[f])
         ]
         warnings = self._apply_owned(payload, values, extra, project_id, type_id)
 
@@ -603,6 +637,8 @@ class Syncer:
             progress = adapter.progress()
             if progress is not None:
                 values["percentageDone"] = progress
+        if self.setting("PUSH_RESPONSIBLE"):
+            values["responsible"] = adapter.responsible()
         if self.setting("PUSH_WORK"):
             hours = adapter.work_hours()
             if hours:
@@ -639,6 +675,20 @@ class Syncer:
             elif field == "parent":
                 href = f"/api/v3/work_packages/{value}" if value else None
                 payload["_links"]["parent"] = {"href": href}
+            elif field == "responsible":
+                href = None
+                if value:
+                    principal = match_principal(
+                        self.client.principals(project_id), value
+                    )
+                    if principal is None:
+                        who = value.get("email") or value.get("name")
+                        warnings.append(
+                            f'Verantwortlich: "{who}" ist in OpenProject nicht Mitglied des Projekts.'
+                        )
+                        continue
+                    href = principal["_links"]["self"]["href"]
+                payload["_links"]["responsible"] = {"href": href}
             elif field in ("percentageDone", "estimatedTime"):
                 payload[field] = value
             elif field.startswith("cf:"):

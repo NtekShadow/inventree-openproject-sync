@@ -55,6 +55,7 @@ class OpenProjectClient:
         self._statuses: list[dict] | None = None
         self._project_types: dict[str, list[dict]] = {}
         self._schemas: dict[str, dict] = {}
+        self._principals: dict[str, list[dict]] = {}
 
     def _request(self, method: str, path: str, **kwargs) -> dict:
         url = f"{self.base_url}/api/v3/{path.lstrip('/')}"
@@ -171,6 +172,22 @@ class OpenProjectClient:
         if key not in self._schemas:
             self._schemas[key] = self._request("GET", f"work_packages/schemas/{key}")
         return self._schemas[key]
+
+    def principals(self, project_id: str) -> list[dict]:
+        """Users and groups that are members of a project."""
+        if project_id not in self._principals:
+            data = self._request(
+                "GET",
+                "principals",
+                params={
+                    "filters": json.dumps(
+                        [{"member": {"operator": "=", "values": [str(project_id)]}}]
+                    ),
+                    "pageSize": 1000,
+                },
+            )
+            self._principals[project_id] = data.get("_embedded", {}).get("elements", [])
+        return self._principals[project_id]
 
     def whoami(self) -> dict[str, Any]:
         """The user the API key belongs to (connection test)."""

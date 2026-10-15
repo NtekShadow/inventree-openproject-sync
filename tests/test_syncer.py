@@ -2,6 +2,7 @@
 
 import copy
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 from openproject_sync import sync as sync_module
@@ -123,6 +124,13 @@ class FakeOpenProject:
         if name not in ids:
             return None
         return {'name': name, '_links': {'self': {'href': f'/api/v3/statuses/{ids[name]}'}}}
+
+    def principals(self, project_id):
+        return [
+            {'_type': 'User', 'name': 'Anna Dreher', 'email': 'anna@example.com',
+             '_links': {'self': {'href': '/api/v3/users/5'}}},
+            {'_type': 'Group', 'name': 'Fertigung', '_links': {'self': {'href': '/api/v3/groups/8'}}},
+        ]
 
     def schema(self, project_id, type_id):
         return {
@@ -444,6 +452,31 @@ class SyncerTest(unittest.TestCase):
         # The child's own sync now agrees with OpenProject
         child.parent = assembly.instance
         self.assertEqual(self.syncer.sync(child), 'keine Änderungen')
+
+    def test_responsible_from_inventree(self):
+        syncer = Syncer(FakePlugin(PUSH_RESPONSIBLE=True))
+        syncer._client = self.op
+        anna = SimpleNamespace(username='anna', email='Anna@Example.com', get_full_name=lambda: 'Anna D.')
+        adapter = self.adapter(responsible=SimpleNamespace(owner=anna))
+        syncer.sync(adapter)
+        self.assertEqual(self.op.wps[200]['_links']['responsible']['href'], '/api/v3/users/5')
+
+        # Changed to a group in InvenTree -> pushed
+        adapter.instance.responsible = SimpleNamespace(owner=SimpleNamespace(name='Fertigung'))
+        syncer.sync(adapter)
+        self.assertEqual(self.op.wps[200]['_links']['responsible']['href'], '/api/v3/groups/8')
+
+        # Not a project member -> warning, nothing else breaks
+        bob = SimpleNamespace(username='bob', email='bob@example.com', get_full_name=lambda: '')
+        adapter.instance.responsible = SimpleNamespace(owner=bob)
+        syncer.sync(adapter)
+        self.assertEqual(self.op.wps[200]['_links']['responsible']['href'], '/api/v3/groups/8')
+        self.assertIn('bob@example.com', ' '.join(self.md(adapter)['warnings']))
+
+        # Removed in InvenTree -> cleared
+        adapter.instance.responsible = None
+        syncer.sync(adapter)
+        self.assertIsNone(self.op.wps[200]['_links']['responsible']['href'])
 
     def test_unlink(self):
         adapter = self.adapter(notes='OP#EL-5')

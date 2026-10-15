@@ -188,6 +188,21 @@ class OrderAdapter:
         """Extra markdown below the info table."""
         return ""
 
+    def responsible(self) -> dict | None:
+        """Responsible user or group of the order (InvenTree owner)."""
+        owner = getattr(self.instance, "responsible", None)
+        principal = getattr(owner, "owner", None) if owner is not None else None
+        if principal is None:
+            return None
+        if hasattr(principal, "username"):
+            return {
+                "type": "user",
+                "email": (principal.email or "").strip().lower(),
+                "login": principal.username,
+                "name": principal.get_full_name().strip() or principal.username,
+            }
+        return {"type": "group", "name": principal.name}
+
     def field_values(self) -> dict[str, object]:
         """Values available for the custom field mapping."""
         return {
