@@ -5,7 +5,9 @@ from __future__ import annotations
 import functools
 import logging
 
+from django.conf import settings
 from django.db import transaction
+from django.utils import translation
 
 from plugin import InvenTreePlugin
 from plugin.mixins import (
@@ -160,6 +162,11 @@ class OpenProjectSync(
             "description": 'Feldname in OpenProject=Wert, getrennt mit ";". Werte: reference, url, status, progress, order_type, part, ipn, quantity, completed, process, machine, manufacturing, work, supplier, supplier_reference, price, price_text',
             "default": "",
         },
+        "SYNC_LANGUAGE": {
+            "name": "Sprache",
+            "description": "Sprache der Texte aus InvenTree in OpenProject (z. B. Status), unabhängig von der Sprache des Benutzers. Leer: Serversprache",
+            "default": "de",
+        },
         "REFERENCE_PREFIX": {
             "name": "Präfix für Verweise",
             "description": "Text vor der Arbeitspaket-ID, z. B. OP# für OP#EL-5",
@@ -194,12 +201,18 @@ class OpenProjectSync(
             "linkify": bool(self.get_setting("LINKIFY_UI")),
         }
 
+    def language(self):
+        """Fixed language for synced texts, whoever triggers the sync."""
+        return translation.override(
+            self.get_setting("SYNC_LANGUAGE") or settings.LANGUAGE_CODE
+        )
+
     def run_action(
         self, model_type: str, pk: int, action: str = "sync", **kwargs
     ) -> tuple[bool, str]:
         """Run a sync action for one order, serialised per order across workers."""
         adapter_cls = ADAPTERS[model_type]
-        with transaction.atomic():
+        with self.language(), transaction.atomic():
             instance = (
                 adapter_cls.model().objects.select_for_update().filter(pk=pk).first()
             )
@@ -241,7 +254,8 @@ class OpenProjectSync(
 
     def poll_openproject(self):
         """Pull changes from OpenProject for all linked open orders."""
-        stats = self.syncer().poll()
+        with self.language():
+            stats = self.syncer().poll()
         if stats["changed"] or stats["errors"]:
             logger.info("OpenProject poll: %s", stats)
 

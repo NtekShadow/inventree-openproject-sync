@@ -42,6 +42,7 @@ Alles andere hat brauchbare Standardwerte:
 | Termine aus OpenProject übernehmen | an | Start-/Endtermin in beide Richtungen |
 | Verantwortliche übertragen | an | *Verantwortlich* aus InvenTree setzen (siehe unten) |
 | Benutzerdefinierte Felder | leer | z. B. `PDM-Nummer=ipn; Lieferant=supplier` (siehe unten) |
+| Sprache | `de` | Sprache der Texte aus InvenTree (z. B. Status), egal wer synchronisiert |
 | Präfix für Verweise | `OP#` | |
 
 IDs von Projekten, Typen, Status oder Custom Fields braucht man nicht.
