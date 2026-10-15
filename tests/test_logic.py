@@ -130,6 +130,7 @@ class MiscTest(unittest.TestCase):
 class MatchPrincipalTest(unittest.TestCase):
     PRINCIPALS = [
         {'_type': 'User', 'name': 'Anna Dreher', 'login': 'adreher'},
+        {'_type': 'User', 'name': 'Lasse  Willmann'},
         {'_type': 'User', 'name': 'Bob Fräser', 'login': 'bob@example.com'},
         {'_type': 'User', 'name': 'Carl', 'email': 'carl@example.com', 'login': 'carl'},
         {'_type': 'Group', 'name': 'Fertigung'},
@@ -145,6 +146,7 @@ class MatchPrincipalTest(unittest.TestCase):
         self.assertEqual(self.match(type='user', email='', login='ADreher', name=''), 'Anna Dreher')
         self.assertEqual(self.match(type='user', email='', login='anna', name='Anna Dreher'), 'Anna Dreher')
         self.assertIsNone(self.match(type='user', email='', login='', name='Fertigung'))
+        self.assertEqual(self.match(type='user', email='x@example.com', login='lw', name='Lasse Willmann'), 'Lasse  Willmann')
 
     def test_group(self):
         self.assertEqual(self.match(type='group', name='fertigung'), 'Fertigung')

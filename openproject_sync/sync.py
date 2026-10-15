@@ -143,7 +143,8 @@ def match_principal(principals: list[dict], who: dict) -> dict | None:
     """
 
     def norm(value) -> str:
-        return str(value or "").strip().lower()
+        # OpenProject names can contain double spaces ("Lasse  Willmann")
+        return " ".join(str(value or "").split()).lower()
 
     if who.get("type") == "group":
         candidates = [("name", who.get("name"))]
