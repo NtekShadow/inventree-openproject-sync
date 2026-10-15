@@ -18,9 +18,22 @@ ACTIONS = {"sync", "link", "create", "unlink", "move"}
 MAX_RESOLVED_REFS = 20
 
 
+def all_models() -> list[type[models.Model]]:
+    """All registered models.
+
+    Unlike ``apps.get_models()`` this also works while InvenTree reloads its
+    plugin registry, when Django's app registry is temporarily not ready.
+    """
+    return [
+        m
+        for app_models in list(apps.all_models.values())
+        for m in list(app_models.values())
+    ]
+
+
 def load_instance(model_type: str, pk) -> models.Model | None:
     """Load an instance by InvenTree model type ('part', 'build', ...)."""
-    for model in apps.get_models():
+    for model in all_models():
         if model.__name__.lower() == model_type and hasattr(model, "get_absolute_url"):
             return model.objects.filter(pk=pk).first()
     return None

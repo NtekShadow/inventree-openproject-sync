@@ -5,7 +5,6 @@ from __future__ import annotations
 import functools
 import logging
 
-from django.apps import apps
 from django.db import transaction
 
 from plugin import InvenTreePlugin
@@ -223,9 +222,11 @@ class OpenProjectSync(
         """Tables of models with a markdown notes field."""
         from InvenTree.models import InvenTreeNotesMixin
 
+        from .views import all_models
+
         return {
             m._meta.db_table: m
-            for m in apps.get_models()
+            for m in all_models()
             if issubclass(m, InvenTreeNotesMixin)
             and m._meta.db_table not in LINKIFY_EXCLUDED_TABLES
         }
@@ -345,8 +346,15 @@ class OpenProjectSync(
         if adapter_cls:
             if not self.get_setting(adapter_cls.sync_setting):
                 return []
-        elif not self.has_refs(model_type, pk):
-            return []
+        else:
+            try:
+                if not self.has_refs(model_type, pk):
+                    return []
+            except Exception:
+                logger.exception(
+                    "OpenProject: reference check for %s %s failed", model_type, pk
+                )
+                return []
 
         return [
             {
