@@ -9,15 +9,15 @@ Benötigt InvenTree ≥ 1.0. Projektbasierte IDs wie `EL-5` gibt es ab OpenProje
 **Über die InvenTree-Oberfläche** (*Einstellungen > Plugins > Plugin installieren*):
 
 - Paketname: `inventree-openproject-sync`
-- Quelle: `git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.2`
+- Quelle: `git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.3`
 
 **Oder in der `plugins.txt`** von InvenTree (eine Zeile):
 
 ```
-inventree-openproject-sync @ git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.2
+inventree-openproject-sync @ git+https://github.com/NtekShadow/inventree-openproject-sync@v0.1.3
 ```
 
-Statt Git geht auch das Wheel aus dem [Release](https://github.com/NtekShadow/inventree-openproject-sync/releases), z. B. `inventree-openproject-sync @ https://github.com/NtekShadow/inventree-openproject-sync/releases/download/v0.1.2/inventree_openproject_sync-0.1.2-py3-none-any.whl`. Das Frontend ist schon gebaut und eingecheckt, ein Node-Build auf dem Server ist nicht nötig.
+Statt Git geht auch das Wheel aus dem [Release](https://github.com/NtekShadow/inventree-openproject-sync/releases), z. B. `inventree-openproject-sync @ https://github.com/NtekShadow/inventree-openproject-sync/releases/download/v0.1.3/inventree_openproject_sync-0.1.3-py3-none-any.whl`. Das Frontend ist schon gebaut und eingecheckt, ein Node-Build auf dem Server ist nicht nötig.
 
 In InvenTree unter *Einstellungen > Plugins* müssen diese Integrationen aktiviert sein: **Ereignis**, **Zeitplan**, **URL** und **Oberfläche**. Danach das Plugin *OpenProject Sync* aktivieren.
 
