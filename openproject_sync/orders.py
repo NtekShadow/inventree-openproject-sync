@@ -381,6 +381,7 @@ class BuildAdapter(OrderAdapter):
         for label, value in (
             ("Verfahren", self.process()),
             ("Maschine", self.machine()),
+            ("Lieferant", self.supplier()),
         ):
             if value:
                 rows.append((label, value))
@@ -428,11 +429,23 @@ class BuildAdapter(OrderAdapter):
 
     def preceding_orders(self):
         """Previous stages (if this is a stage) and purchase orders for this build."""
+        stages = list(self.instance.children.all()) if self.is_stage() else []
+        return [*stages, *self._purchase_orders()]
+
+    def _purchase_orders(self) -> list[models.Model]:
+        """Purchase orders with line items for this build."""
         from order.models import PurchaseOrder
 
-        stages = list(self.instance.children.all()) if self.is_stage() else []
-        pos = PurchaseOrder.objects.filter(lines__build_order=self.instance).distinct()
-        return [*stages, *pos]
+        return list(
+            PurchaseOrder.objects.filter(lines__build_order=self.instance).distinct()
+        )
+
+    def supplier(self) -> str:
+        """Suppliers of an external build: those of its purchase orders."""
+        if not self.is_external:
+            return ""
+        names = {po.supplier.name for po in self._purchase_orders() if po.supplier}
+        return ", ".join(sorted(names))
 
     def following_orders(self):
         """The next stage, if the parent build is a stage."""
@@ -454,6 +467,7 @@ class BuildAdapter(OrderAdapter):
             "machine": self.machine(),
             "manufacturing": self.manufacturing(),
             "work": self.work_hours(),
+            "supplier": self.supplier(),
         }
 
     def manufacturing(self) -> str:

@@ -41,9 +41,12 @@ class StructureTest(unittest.TestCase):
         self.zelle = make_build('Zelle', '', self.modul)
 
         # preceding_orders() looks up purchase orders; no database here
+        self.purchase_orders = []
         order_models = ModuleType('order.models')
         order_models.PurchaseOrder = SimpleNamespace(
-            objects=SimpleNamespace(filter=lambda **kw: SimpleNamespace(distinct=lambda: []))
+            objects=SimpleNamespace(
+                filter=lambda **kw: SimpleNamespace(distinct=lambda: self.purchase_orders)
+            )
         )
         patcher = mock.patch.dict(sys.modules, {'order': ModuleType('order'), 'order.models': order_models})
         patcher.start()
@@ -72,6 +75,13 @@ class StructureTest(unittest.TestCase):
         self.assertEqual(adapter(self.modul).following_orders(), [])
         self.assertEqual(self.refs(adapter(self.milled).preceding_orders()), ['turned'])
         self.assertEqual(adapter(self.akku).preceding_orders(), [])
+
+    def test_supplier_of_external_build(self):
+        po = SimpleNamespace(supplier=SimpleNamespace(name='Eloxal GmbH'))
+        self.purchase_orders = [po, po]
+        self.assertEqual(adapter(self.anodized).supplier(), '')
+        self.anodized.external = True
+        self.assertEqual(adapter(self.anodized).supplier(), 'Eloxal GmbH')
 
 
 if __name__ == '__main__':

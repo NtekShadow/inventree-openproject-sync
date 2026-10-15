@@ -69,7 +69,7 @@ Rückwege braucht es, weil Aufträge in InvenTree wieder geöffnet werden könne
 | `Maschine` (Liste) | `machine` | Werte = Namen der Maschinen (bzw. der Sätze in Manufacturing Costs) |
 | `Fertigung` (Liste: Eigenfertigung, Fremdfertigung) | `manufacturing` | zum Filtern auf Eigenfertigung |
 | `PDM-Nummer` (Text) | `ipn` | existiert schon, nur für die Typen aktivieren |
-| `Lieferant` (Text) | `supplier` | Bestellungen |
+| `Lieferant` (Text) | `supplier` | Bestellungen und externe Fertigungsaufträge (Lieferant der zugehörigen Bestellungen) |
 | `Menge` / `Gefertigt` (Ganzzahl) | `quantity` / `completed` | Fertigungsaufträge |
 
 Dann in den Plugin-Einstellungen unter *Benutzerdefinierte Felder*:
