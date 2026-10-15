@@ -157,7 +157,7 @@ class OpenProjectSync(
         },
         "CUSTOM_FIELDS": {
             "name": "Benutzerdefinierte Felder (optional)",
-            "description": 'Feldname in OpenProject=Wert, getrennt mit ";". Werte: reference, url, status, progress, order_type, part, ipn, quantity, completed, process, machine, manufacturing, work, supplier, supplier_reference',
+            "description": 'Feldname in OpenProject=Wert, getrennt mit ";". Werte: reference, url, status, progress, order_type, part, ipn, quantity, completed, process, machine, manufacturing, work, supplier, supplier_reference, price, price_text',
             "default": "",
         },
         "REFERENCE_PREFIX": {

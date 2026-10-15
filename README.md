@@ -70,6 +70,7 @@ Rückwege braucht es, weil Aufträge in InvenTree wieder geöffnet werden könne
 | `Maschine` (Liste) | `machine` | Werte = Namen der Maschinen (bzw. der Sätze in Manufacturing Costs) |
 | `Fertigung` (Liste: Eigenfertigung, Fremdfertigung) | `manufacturing` | zum Filtern auf Eigenfertigung |
 | `PDM-Nummer` (Text) | `ipn` | existiert schon, nur für die Typen aktivieren |
+| `Preis` (Gleitkommazahl) | `price` | Bestellungen: Gesamtpreis ohne Währung; als Text mit Währung: `price_text` |
 | `Lieferant` (Text) | `supplier` | Bestellungen und externe Fertigungsaufträge (Lieferant der zugehörigen Bestellungen) |
 | `Menge` / `Gefertigt` (Ganzzahl) | `quantity` / `completed` | Fertigungsaufträge |
 
@@ -79,7 +80,7 @@ Dann in den Plugin-Einstellungen unter *Benutzerdefinierte Felder*:
 Fertigungsverfahren=process; Maschine=machine; Fertigung=manufacturing; PDM-Nummer=ipn; Lieferant=supplier; Menge=quantity; Gefertigt=completed
 ```
 
-Weitere mögliche Werte: `reference`, `url`, `status`, `progress`, `order_type`, `part`, `work`, `supplier_reference`. Unterstützt werden Text, Langer Text, Ganzzahl, Gleitkommazahl, Boolean, Datum und Listen (auch Mehrfachauswahl, Werte durch Komma getrennt). Bei Listen wird der Eintrag mit gleichem Namen gewählt. Fehlt ein Wert in der Liste, oder ist ein Feld für einen Typ nicht aktiviert, wird das Feld übersprungen und im Panel als Hinweis angezeigt.
+Weitere mögliche Werte: `reference`, `url`, `status`, `progress`, `order_type`, `part`, `work`, `supplier_reference`, `price_text`. Unterstützt werden Text, Langer Text, Ganzzahl, Gleitkommazahl, Boolean, Datum und Listen (auch Mehrfachauswahl, Werte durch Komma getrennt). Bei Listen wird der Eintrag mit gleichem Namen gewählt. Fehlt ein Wert in der Liste, oder ist ein Feld für einen Typ nicht aktiviert, wird das Feld übersprungen und im Panel als Hinweis angezeigt.
 
 ## Eigenfertigung: Verfahren, Maschine, Aufwand
 

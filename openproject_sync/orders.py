@@ -553,6 +553,9 @@ class PurchaseOrderAdapter(OrderAdapter):
         ]
         if po.supplier_reference:
             rows.append(("Lieferanten-Referenz", po.supplier_reference))
+        price = self.price_text()
+        if price:
+            rows.append(("Gesamtpreis", price))
         rows += [
             ("Positionen", str(po.lines.count())),
             ("Geliefert", f"{_fmt_qty(received)} / {_fmt_qty(ordered)}"),
@@ -598,7 +601,32 @@ class PurchaseOrderAdapter(OrderAdapter):
             **super().field_values(),
             "supplier": self._supplier(),
             "supplier_reference": self.instance.supplier_reference or "",
+            "price": self.price()[0],
+            "price_text": self.price_text() or None,
         }
+
+    def price(self) -> tuple[float | None, str]:
+        """Total price (amount, currency) of the order, (None, '') if there is none."""
+        po = self.instance
+        total = getattr(po, "total_price", None)
+        if total is None and hasattr(po, "calculate_total_price"):
+            try:
+                total = po.calculate_total_price()
+            except Exception:  # noqa: BLE001 - e.g. missing exchange rates
+                logger.warning("OpenProject: no total price for %s", po.reference)
+                total = None
+        amount = getattr(total, "amount", None)
+        if not amount:
+            return None, ""
+        return round(float(amount), 2), str(getattr(total, "currency", "") or "")
+
+    def price_text(self) -> str:
+        """Total price formatted like '1.234,50 EUR'."""
+        amount, currency = self.price()
+        if amount is None:
+            return ""
+        text = f"{amount:,.2f}".replace(",", " ").replace(".", ",").replace(" ", ".")
+        return f"{text} {currency}".strip()
 
 
 ADAPTERS: dict[str, type[OrderAdapter]] = {
