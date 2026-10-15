@@ -531,10 +531,27 @@ class PurchaseOrderAdapter(OrderAdapter):
         return ordered, received
 
     def subject(self):
-        """Work package subject."""
-        po = self.instance
-        text = po.description or self._supplier() or "Bestellung"
-        return f"{self.reference}: {text}"
+        """Work package subject, e.g. 'PO-0019 bei Würth: Schrauben für Akku'."""
+        supplier = self._supplier()
+        head = f"{self.reference} bei {supplier}" if supplier else self.reference
+        text = (self.instance.description or "").strip()
+        return f"{head}: {text}" if text else head
+
+    def details_markdown(self):
+        """Table of the line items."""
+        lines = self.instance.lines.all()
+        if not lines:
+            return ""
+        rows = ["| Teil | Lieferanten-Nr. | Menge | Geliefert |", "|---|---|---|---|"]
+        for line in lines:
+            supplier_part = getattr(line, "part", None)
+            part = getattr(supplier_part, "part", None)
+            name = (getattr(part, "full_name", "") or "-").replace("|", "/")
+            sku = (getattr(supplier_part, "SKU", "") or "-").replace("|", "/")
+            rows.append(
+                f"| {name} | {sku} | {_fmt_qty(line.quantity)} | {_fmt_qty(line.received)} |"
+            )
+        return "\n".join(rows)
 
     def progress(self):
         """Received quantity in percent."""

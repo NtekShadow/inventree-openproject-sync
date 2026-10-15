@@ -25,5 +25,45 @@ class PriceTest(unittest.TestCase):
             self.assertEqual(a.price_text(), '')
 
 
+def line(qty, name, sku='', received=0):
+    return SimpleNamespace(
+        quantity=qty, received=received, part=SimpleNamespace(part=SimpleNamespace(full_name=name), SKU=sku)
+    )
+
+
+def subject_adapter(description='', supplier='Würth', lines=()):
+    po = SimpleNamespace(
+        reference='PO-0019',
+        description=description,
+        supplier=SimpleNamespace(name=supplier) if supplier else None,
+        lines=SimpleNamespace(all=lambda: list(lines)),
+    )
+    return PurchaseOrderAdapter(po)
+
+
+class SubjectTest(unittest.TestCase):
+    def test_description_with_supplier(self):
+        a = subject_adapter('sponsoring anfrage 1')
+        self.assertEqual(a.subject(), 'PO-0019 bei Würth: sponsoring anfrage 1')
+
+    def test_supplier_without_description(self):
+        self.assertEqual(subject_adapter('  ').subject(), 'PO-0019 bei Würth')
+
+
+class DetailsTest(unittest.TestCase):
+    def test_line_items_table(self):
+        lines = [line(100, 'Schraube M3', '0084 3 10', received=40), line(5, 'Mutter M3')]
+        self.assertEqual(
+            subject_adapter(lines=lines).details_markdown(),
+            '| Teil | Lieferanten-Nr. | Menge | Geliefert |\n'
+            '|---|---|---|---|\n'
+            '| Schraube M3 | 0084 3 10 | 100 | 40 |\n'
+            '| Mutter M3 | - | 5 | 0 |',
+        )
+
+    def test_no_lines(self):
+        self.assertEqual(subject_adapter().details_markdown(), '')
+
+
 if __name__ == '__main__':
     unittest.main()
