@@ -1,0 +1,2 @@
+# Built frontend files are committed so the plugin can be installed straight from git
+# (run `npm run build` in ../frontend before committing frontend changes)

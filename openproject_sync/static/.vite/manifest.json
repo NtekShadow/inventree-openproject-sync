@@ -1,0 +1,24 @@
+{
+  "_linkify-CJSg3kGN.js": {
+    "file": "assets/linkify-CJSg3kGN.js",
+    "name": "linkify"
+  },
+  "src/Dashboard.tsx": {
+    "file": "Dashboard-Cz5C9_tF.js",
+    "name": "Dashboard",
+    "src": "src/Dashboard.tsx",
+    "isEntry": true,
+    "imports": [
+      "_linkify-CJSg3kGN.js"
+    ]
+  },
+  "src/Panel.tsx": {
+    "file": "Panel-B7H_kB7h.js",
+    "name": "Panel",
+    "src": "src/Panel.tsx",
+    "isEntry": true,
+    "imports": [
+      "_linkify-CJSg3kGN.js"
+    ]
+  }
+}
