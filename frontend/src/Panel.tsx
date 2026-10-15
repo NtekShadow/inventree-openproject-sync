@@ -320,9 +320,36 @@ function OrderPanel({
         </Paper>
       )}
 
-      {state.linked && !wp && !state.error && (
-        <Alert color='red'>
-          Das verknüpfte Arbeitspaket wurde nicht gefunden.
+      {state.linked && !wp && (
+        <Alert color='red' title='Arbeitspaket nicht gefunden'>
+          <Stack gap='xs'>
+            <Text size='sm'>
+              Das verknüpfte Arbeitspaket gibt es in OpenProject nicht mehr oder
+              es ist nicht sichtbar. Beim nächsten Sync wird die Verknüpfung
+              entfernt und, wenn automatisches Anlegen an ist, ein neues
+              Arbeitspaket angelegt.
+            </Text>
+            {state.can_edit && (
+              <Group>
+                <Button
+                  size='xs'
+                  loading={busy === 'sync'}
+                  onClick={() => run('sync')}
+                >
+                  Jetzt synchronisieren
+                </Button>
+                <Button
+                  size='xs'
+                  variant='subtle'
+                  color='red'
+                  loading={busy === 'unlink'}
+                  onClick={() => run('unlink')}
+                >
+                  Verknüpfung lösen
+                </Button>
+              </Group>
+            )}
+          </Stack>
         </Alert>
       )}
 

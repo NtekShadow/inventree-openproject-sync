@@ -307,9 +307,17 @@ class Syncer:
             if wp is None:
                 wp = self.client.get_work_package(md["wp"])
             if wp is None:
-                raise SyncError(
-                    f"Arbeitspaket {md.get('display') or md['wp']} nicht gefunden (gelöscht?)"
+                # Deleted in OpenProject (e.g. to change its type): drop the link
+                # and start over with a new work package
+                gone = md.get("display") or md["wp"]
+                logger.info(
+                    "OpenProject: %s for %s is gone, unlinking", gone, adapter.reference
                 )
+                self.unlink(adapter)
+                md = {}
+                if allow_create and self._should_auto_create(adapter):
+                    return f"{gone} war gelöscht, {self.create(adapter)}"
+                return f"{gone} war gelöscht, Verknüpfung entfernt"
             return self._reconcile(adapter, wp, md)
         except (SyncError, OpenProjectError) as exc:
             logger.warning("OpenProject sync %s: %s", adapter.reference, exc)
@@ -381,7 +389,11 @@ class Syncer:
 
     def unlink(self, adapter: OrderAdapter) -> None:
         """Remove the link (the work package itself stays)."""
-        self.save_meta(adapter, None)
+        fields = {}
+        link = getattr(adapter.instance, "link", None)
+        if link and refs.find_url_ref(link, self.base_url):
+            fields["link"] = ""
+        self.save_meta(adapter, None, **fields)
 
     def create(self, adapter: OrderAdapter, project: str | None = None) -> str:
         """Create a work package for an order in the target project."""

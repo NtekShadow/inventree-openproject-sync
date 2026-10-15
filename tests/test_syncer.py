@@ -364,13 +364,23 @@ class SyncerTest(unittest.TestCase):
         # Not retried while the value stays the same
         self.assertEqual(self.syncer.sync(adapter), 'keine Änderungen')
 
-    def test_deleted_work_package_records_error(self):
+    def test_deleted_work_package_is_recreated(self):
         adapter = self.adapter(notes='OP#EL-5')
         self.syncer.sync(adapter)
         del self.op.wps[200]
-        with self.assertRaises(sync_module.SyncError):
-            self.syncer.sync(adapter)
-        self.assertIn('nicht gefunden', self.md(adapter)['error'])
+        self.assertIn('EL-200 war gelöscht', self.syncer.sync(adapter))
+        self.assertEqual(self.md(adapter)['wp'], 201)
+        self.assertEqual(adapter.instance.link, 'https://pm.example.com/work_packages/EL-201')
+
+    def test_deleted_work_package_is_unlinked_without_auto_create(self):
+        adapter = self.adapter()
+        self.syncer.sync(adapter)
+        del self.op.wps[200]
+        syncer = Syncer(FakePlugin(AUTO_CREATE=False))
+        syncer._client = self.op
+        self.assertIn('Verknüpfung entfernt', syncer.sync(adapter))
+        self.assertNotIn(sync_module.META_KEY, adapter.instance.metadata)
+        self.assertEqual(adapter.instance.link, '')
 
     def test_legacy_link_is_migrated(self):
         legacy = sync_module.LEGACY_MARKERS[0]
